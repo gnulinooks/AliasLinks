@@ -1,0 +1,89 @@
+<html>
+<head>
+<script>
+var logging = false;
+
+function initialize(){
+	try{
+		var value = window.localStorage.getItem("aliasTabs");
+		if(value == null){
+			window.localStorage.setItem("aliasTabs","");
+			return false;
+		}
+		else return value;
+	}catch(e){}
+}
+
+function log(txt) {
+    if(logging) {
+      console.log(txt);
+    }
+}  
+function obj(){
+	this.length = 0;
+	this.allTrue = false;
+	this.numberOfTrueValues = 0;
+	var arr = initialize();
+	this.listOfUrls  = {};
+	if(arr)
+		arr = arr.split(' ');
+	for(var i = 0; i<arr.length;i += 2){
+		this.listOfUrls[arr[i]] = arr[i+1];
+		this.length++;
+	}
+}
+var o = new obj();
+function saveAliasAndLinks(value){
+	try{
+		window.localStorage.setItem('aliasTabs',value);
+		o = new obj();
+	}
+	catch(e){
+	log(e);
+	}
+}
+chrome.omnibox.onInputEntered.addListener(function (text) {
+	chrome.windows.getCurrent(function(window){
+		chrome.tabs.getSelected(window.id,function(tab){
+			var tabUrl = text;
+			var wordAfterUrl = '';
+			if(tabUrl.split(' ').length > 1){
+				var temp = tabUrl.split(' ');
+				wordAfterUrl = tabUrl.substring(tabUrl.indexOf(' ')  + 1, tabUrl.length);
+				tabUrl = temp[0] + '+';
+			}
+			if(o.listOfUrls.hasOwnProperty(tabUrl))
+			{
+				var newUrl = o.listOfUrls[tabUrl] + wordAfterUrl;
+				var regex = /https?:\/\//;
+				if(!regex.test(newUrl))
+				{
+					newUrl = "http://" + newUrl;
+				}
+				chrome.tabs.update(tab.id, {url: newUrl});
+			}
+		});
+	});
+});
+chrome.tabs.onUpdated.addListener(function(id, changeInfo, tab){
+	var tabUrl = tab.url.replace(/http:[^<]+&[q|p]=/,"");
+	var wordAfterUrl = "";
+	if(tabUrl.split('+').length > 1){
+		var temp = tabUrl.split('+');
+		wordAfterUrl = tabUrl.substring(tabUrl.indexOf('+')  + 1, tabUrl.length);
+		tabUrl = temp[0] + '+';
+	}
+	if(o.listOfUrls.hasOwnProperty(tabUrl))
+	{
+		var newUrl = o.listOfUrls[tabUrl] + wordAfterUrl;
+		var regex = /https?:\/\//;
+		if(!regex.test(newUrl))
+		{
+			newUrl = "http://" + newUrl;
+		}
+		chrome.tabs.update(id, {url: newUrl});
+	}
+});
+</script>
+</head>
+</html>

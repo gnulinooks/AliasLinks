@@ -1,0 +1,36 @@
+Alias Links
+
+Alias Links is specially for those people who hate to use mouse. This extension will let you to keep short single word names for your URLs that you feel difficulties to remember. Its always easy to relate things with real objects and hence that's why we never forget real objects name and things related to them. For these related things we may not be able to remember their names but we can explain them. 
+Lets for sake of example, I never remember the login page url for ICICI bank web site. So I kept a small word "bank" as an alias for login page url of ICICI bank. Whenever I type bank on address bar. It will take me to ICICI login page. So now I don't need to navigate page 3-4 times for the same purpose. When you use bookmark extension, you may have to click atleast twice and then you will go to the desired url. 
+So basically, you keep a small name for a particular url whatever the first thing pops up in your head after looking at the site pages. You alias the link url to that name and save it. Next time whenever you type that name in the address bar you will be redirected to that site.
+Example:
+Alias               Links
+dashboard       https://chrome.google.com/webstore/developer/dashboard
+
+
+
+To avoid the google search redirect page, use "a" and space in the address bar and then write the alias name.
+
+There is search query option as well where we can set any name and "+"(so it will become "name+") for name and then add link "http://www.google.com/images?q=" for google images search and save it. Now to use this type "name word" 
+
+Example:
+Alias                 Links
+i+                    http://www.google.com/images?q=
+
+To use this functionality, write "i gallardo" in address bar then it will redirect you to gallardo google image page.
+
+Import/Export Alias Links:
+
+You can sync all your chrome data with multiple computers where you are running chrome. Please follow this link http://www.google.com/support/chrome/bin/answer.py?answer=185277 . If you want only extension data to be synchronized then select only extensions form the options given in above link.
+
+
+I wanted to do it but I think javascript is not secure to store files on local machine and even this is not encouraged to do.  If you want to shift your Alias Links only, from one computer to another without using chrome sync options, then you can do with following steps.
+
+1. Find "Local Storage" directory in chrome installed directory. 
+On Ubuntu it will be located at "~/.config/chromium/Default/Local Storage".
+On Mac it will be located at " ~/Library/Application Support/Google/Chrome/Default/Local Storage"
+
+2. In "Local Storage" directory there will be a fine named:  
+"chrome-extension_hnmffkbofelpmfnimaicmkdhimnaegla_0.localstorage". Copy this file (from the existing Alias Link Computer) and put it in the "Local Storage" of Chrome directory in new computer. Make sure the existing file gets overwritten while pasting into new computer. 
+
+This way you will get all your existing Aliases in new computer as well.
