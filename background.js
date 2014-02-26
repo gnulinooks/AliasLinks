@@ -35,12 +35,7 @@ function parseJsonObject(json){
 	if(json !== undefined && json !== '' && json !== null)
 	{
 		try{
-			if(typeof(json) === "object"){
-				mappings = makeMappings(json);
-			}
-			else if(typeof(json === "string")){
-				mappings = makeMappings(JSON.parse(json));
-			}
+			mappings = checkTypeOfJson(json);
 		}
 		catch(e){
 			var arr = json.split(" "), 
@@ -51,6 +46,15 @@ function parseJsonObject(json){
 			}
 		}
 		return mappings;
+	}
+}
+
+function checkTypeOfJson(json){
+	if(typeof(json) === "object"){
+		return json;
+	}
+	else if(typeof(json === "string")){
+		return JSON.parse(json);
 	}
 }
 
@@ -69,7 +73,6 @@ function obj(){
 }
 
 var o = new obj();
-syncData();
 function saveAliasAndLinks(value){
 	try{
 		window.localStorage.setItem('aliasTabs',value);
@@ -125,114 +128,27 @@ chrome.tabs.onUpdated.addListener(function(id, changeInfo, tab){
 	}
 });
 
-//Synchronization
-
-function syncData()
-{
-    chrome.storage.sync.get("aliasTabs", function (cloudData_aliasTabs) {
-		var cloudData = cloudData_aliasTabs.aliasTabs;
-        if (cloudData && cloudData.GeneralInfo) {
-            var localData = JSON.parse(initialize()),
-                newData = {},
-                length = 0,
-                id = 1,
-                key = {},
-                cloudChanged = false,
-                localChanged = false,
-                currentAlias = {};
-            if (Date(localData.GeneralInfo.lastUpdated) != Date(cloudData.GeneralInfo.lastUpdated)) {
-                for (key in cloudData.Aliases) {
-                    if (key in localData.Aliases) {
-                        currentAlias = getUpdatedAlias(cloudData.Aliases[key], localData.Aliases[key])
-                        currentAlias.id = id;
-                        id++;
-                        length++;
-                        cloudChanged = Date(cloudData.Aliases[key].updatedOn) > Date(localData.Aliases[key].updatedOn);
-                        localChanged = Date(cloudData.Aliases[key].updatedOn) < Date(localData.Aliases[key].updatedOn);
-                    }
-                    else {
-                        currentAlias = cloudData.Aliases[key];
-                        currentAlias.id = id;
-                        id++;
-                        length++;
-                        cloudChanged = true;
-                    }
-                    newData[key] = currentAlias;
-                }
-                for (key in localData.Aliases) {
-                    if (!(key in newData)) {
-                        localChanged = true;
-                        currentAlias = localData.Aliases[key];
-                        currentAlias.id = id;
-                        id++;
-                        length++;
-                        newData[key] = currentAlias;
-                    }
-                }
-
-                uploadAndSaveData(cloudChanged, localChanged, id + 1, length, newData, localData.GeneralInfo.lastUpdated, cloudData.GeneralInfo.lastUpdated);
-            }
-        }
-        else
-        {
-			var data = initialize(),
-			date = new Date();
-			data = JSON.parse(data);
-			if(!data.GeneralInfo.lastUpdated){
-				data.GeneralInfo['lastUpdated'] = date.toUTCString();
-				saveAliasAndLinks(JSON.stringify(data));
+//Synchronization of data
+/*function syncDataOnCloud(){
+	Chrome.storage.sync.get("AliasTabs", function(json){
+		var localData = checkTypeOfJson(initialize()),
+			updatedDate = new Date(),
+			cloudData = localData,
+			isCloudChanged = false,
+			isLocalChanged = false;
+		if(json.UpdatedDate === undefined){
+			if(localData.GeneralInfo !== undefined){
+				cloudData.UpdatedDate = updatedDate;
+				setData(cloudData);
 			}
-            saveDataOnCloud(data);
-        }
-    });
+		}
+		else if(json.UpdatedDate !== localData.UpdatedDate){
+
+		}
+
+	});
 }
 
-function uploadAndSaveData(cloudChanged, localChanged, id, length, newData, localUpdatedDate, cloudUpdatedDate) {
-    var generalInfo = { currentMaxId: id, currentLength: length },
-        currentUpdatedDate,
-        data = {};
-    
-    if (localChanged && cloudChanged) {
-        currentUpdatedDate = new Date();
-        currentUpdatedDate = currentUpdatedDate.toUTCString();
-    }
-    else if (cloudChanged) {
-        currentUpdatedDate = cloudUpdatedDate;
-    }
-
-    else if (localChanged) {
-        currentUpdatedDate = localUpdatedDate;
-    }
-
-    generalInfo['lastUpdated'] = currentUpdatedDate;
-
-    data = { GeneralInfo: generalInfo, Aliases: newData };
-
-    if (localChanged && cloudChanged) {
-        saveAliasAndLinks(data);
-        saveDataOnCloud(data);
-    }
-    else if (cloudChanged) {
-        saveAliasAndLinks(data);
-    }
-    else if (localChanged) {
-        saveDataOnCloud(data);
-    }
-}
-
-function getUpdatedAlias(cloudAlias, localAlias) {
-    if (    Date(cloudAlias.updatedOn) === Date(localAlias.updatedOn)
-        &&  cloudAlias.link === localAlias.link) {
-        return cloudAlias;
-    }
-    else if (Date(cloudAlias.updatedOn) > Date(localAlias.updatedOn)) {
-        return cloudAlias;
-    }
-    else {
-        return localAlias;
-    }   
-}
-
-function saveDataOnCloud(value) {
-    chrome.storage.sync.set({ "aliasTabs": value });
-}
+function setData(value){
+	chrome.storage.sync.set({"AliasTabs" : value}, function(){});
+}*/

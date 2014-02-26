@@ -1,150 +1,58 @@
+<!DOCTYPE html/>
 <html>
 <head>
-<style>
-body {
-  background:url("background.png");
-  min-width:217px;
-  overflow-x:hidden;
-  margin-left:22px;
-}
-input {
-         background-image:url("input.png");
-		 background-repeat: no-repeat;
-         color: #000000;
-         font-family: "Trebuchet MS", Arial, Helvetica, Verdana, sans-serif;
-         font-size: 0.75em;
-}
-span.header{
-		font-family: "Trebuchet MS", Arial, Helvetica, Verdana, sans-serif;
-        font-size: 1.25em;
-}
-span{
-		font-family: "Trebuchet MS", Arial, Helvetica, Verdana, sans-serif;
-        font-size: 0.85em;
-}
-</style>
+<meta lang="en" />
+<link rel="stylesheet" type="text/css" href="css/main.css" ></link>
 
-<script>
-var length = 0;
-function obj( items){
-	this.arr = items.split(" ");
-	this.aliasLinkList = {};
-	this.length = 0;
-	for(var i = 0;i<this.arr.length;i += 2){
-		this.aliasLinkList[this.arr[i]] = this.arr[i+1];
-		this.length++;
-	}
-}
-
-function populate(){
-	var aliasLinks = chrome.extension.getBackgroundPage().initialize(); 
-	var i = 0;
-	if(aliasLinks){
-		var objects = new obj(aliasLinks);
-		var Keys =[];
-		for(var j in objects.aliasLinkList){
-			//alert("the key=" + i + " value=" + objects.aliasLinkList[i]);
-			Keys.push(j);
-		}
-		Keys = Keys.sort();
-		//alert(Keys);
-		for(;i<Keys.length;i++){
-			//alert(Keys + "   " + Keys[i] + "=" + objects.aliasLinkList[Keys[i]]);
-			//alert(objects.arr[i] + objects.arr[i+1]);
-			if(i > 2)addInputField('inputTable');
-			document.getElementById('alias' + i.toString()).value = Keys[i];
-			document.getElementById('link' + i.toString()).value = objects.aliasLinkList[Keys[i]];
-		}
-		if(i > 2)
-			addInputField('inputTable');
-	}
-	chrome.tabs.getSelected(null, function(tab) {
-		document.getElementById('link' + i.toString()).value = tab.url;
-	});
-}
-
-
-
-function addInputField( tableId){
-	var table = document.getElementById(tableId);
-	var rowCount = table.rows.length;
-	var row = table.insertRow(rowCount - 1);
-	var cellAlias = row.insertCell(0);
-	cellAlias.align = "center";
-	var cellLink = row.insertCell(1);
-	var element = document.createElement("input");
-	element.type = "text";
-	element.id = "alias" + (rowCount - 2).toString();
-	element.size = "10";
-	element.value = "";
-	cellAlias.appendChild(element);
-	var element2 = document.createElement("input");
-	element2.size = "50";
-	element2.value = "";
-	element2.id = "link" + (rowCount - 2).toString();
-	cellLink.appendChild(element2);
-}
-function saveItems(){
-	var inputs = document.getElementsByTagName('input');
-	var flag = 1;
-	var arr = inputs[0].value;
-	if(arr == "")flag = 0;
-	for(var i=1;i<inputs.length ;i++){
-		if(inputs[i].value != ""){
-			if(flag == 0){
-				document.getElementById("savedMessage").innerHTML = "Please check the input fields!";
-				document.getElementById("savedMessage").style.color="red";
-				document.getElementById("savedMessage").style.display="block";
-				return;
-			}
-			arr += ' ' + inputs[i].value;
-		}
-		else{
-			flag = 0;
-		}
-	}
-	try{
-		chrome.extension.getBackgroundPage().saveAliasAndLinks(arr);
-		}
-	catch(err){
-		document.getElementById("savedMessage").innerHTML = "There is some error in your Local chrome storage!";
-		document.getElementById("savedMessage").style.color="red";
-		document.getElementById("savedMessage").style.display = "block";
-		return;
-	}
-	document.getElementById("savedMessage").style.color="black";
-	document.getElementById("savedMessage").innerHTML = "Your alias has been saved!";
-	document.getElementById("savedMessage").style.display = "block";
-}
-
-</script>
+<script src="popup.js" type="text/javascript"> </script>
+<script src="jquery-latest.min.js" type="text/javascript"> </script>
 </head>
-<body onload="populate()">
-	<form name="aliasTabs">
-		<table id="inputTable" class="" cellpadding="0" cellspacing="0" width=200px>
+<body>
+	<!--div id="menu">
+		<ul>
+			<li><button class="aliases selected">Aliases</button></li>
+			<li><button class="import">Import</button></li>
+			<li><button class="export">Export</button></li>
+		</ul>
+	</div-->
+	<div id="aliases" class="content">
+		<div id="headers">
+			<div class="floatleft" style="width:83px"><span class="header">Alias</span></div>
+			<div class="" style="width:300px"><span class="header">Links</span></div>
+		</div>
+		<div id="dataList" width="390px">
+		</div>
+		<div class="clear buttonArea">
+			<a  href="#" class="button saveAlias">Save</a>
+			<!--a href="#" class="button add">Add more</a-->
+		</div>
+		<span id="savedMessage" style="display:none"></span>
+	</div>
+
+	<div id="import" class="content hidden">
+	<br />
+	<br />
+	<span>Copy the text from the following box and save it in a file.</span>
+	<br/>
+		<fieldset style="width:300px;height:100px;word-wrap:break-word;font-size:0.75em;">
+		<legend>Aliases</legend>
+		</fieldset>
+	</div>
+
+	<div id="export" class="content hidden">
+	<br />
+	<br />
+	<span>Paste your aliases in the following text area.It should be<br/>in the same format as you get it while importing the aliases.</span>
+	<textarea style="width:340px;height:100px;padding:0px;margin:0px;font-size:0.75em" border="0" >
+	</textarea>
+			<table>
 			<tr>
-				<td class=""  align="center"><span class="header">Alias</span></td>
-				<td class=""><span class="header">Links</span></td>
-			</tr>
-			<tr>
-				<td class="" align="center"><input type="text" size="10" value="" id="alias0"/></td>
-				<td><input type="text" size="50" id="link0" value=""/></td>
-			</tr>
-			<tr>
-				<td class=""  align="center"><input type="text" size="10" id="alias1" value="" /></td>
-				<td><input type="text" size="50" id="link1" value=""/></td>
-			</tr>
-			<tr>
-				<td class="" align="center"><input type="text" size="10" id="alias2" value=""/></td>
-				<td><input type="text" size="50" id="link2" value=""/></td>
-			</tr>
-			
-			<tr>
-				<td class="" align="center"><img src="save.png" onClick="saveItems()"/></td>
-				<td><img src="add.png"  style="margin-left:7px;margin-top:7px" onclick="addInputField('inputTable')" /><span style="margin-left:7px">Add more alias!</span></td>
+				<td class="" align="center"><img class="saveAlias" src="save.png" onClick="saveItems()"/></td>
+				<td><img class="addAlias" src="add.png"  style="margin-left:7px;margin-top:7px" onclick="addInputField('inputTable')" /><span style="margin-left:7px">Add more alias!</span></td>
 			</tr>
 		</table>
 		<span id="savedMessage" style="display:none"></span>
-	</form>
+	</div>
+
 </body>
 </html>
