@@ -56,13 +56,12 @@ function populate(){
 	//var window = 
 	chrome.runtime.getBackgroundPage(function(window){
 		var aliasLinks = window.window.localStorage.getItem("aliasTabs"),
-			aliases = {},
-			currentMaxId = 1,
-			currentLenght = 0,
-			sortedAliases = [],
-			currentAlias = {};
-		//var aliasLinks = '{"GeneralInfo":{"currentMaxId":"9","currentLength":10},"Aliases":{"1":{"id":"1","alias":"Aliassafadfsdfsdfssfsfsfsa","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"2":{"id":"2","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"3":{"id":"3","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"4":{"id":"4","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"5":{"id":"5","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"6":{"id":"6","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"7":{"id":"7","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"8":{"id":"8","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"9":{"id":"9","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""},"10":{"id":"10","alias":"Alias","link":"https://chrome.google.com/webstore/category/apps","createdOn":"","updatedOn":""}}}';
-		//alert(aliasLinks);
+		aliases = {},
+		currentMaxId = 1,
+		currentLenght = 0,
+		sortedAliases = [],
+		currentAlias = {};
+		
 		if(aliasLinks !== undefined && aliasLinks !== "" && aliasLinks !== null)
 		{
 			aliases = createAliasesJSONObject(aliasLinks),
@@ -72,7 +71,7 @@ function populate(){
 			
 			for(var key = 0; key < sortedAliases.length; key++){
 				currentAlias = aliases.Aliases[sortedAliases[key]];
-				addRow(currentAlias.id, currentAlias.alias, currentAlias.link, currentAlias.updatedOn, currentAlias.active, false);
+				addRow(currentAlias.id, currentAlias.alias, currentAlias.link, false);
 			}
 			
 			if(currentLength >= 5 ){
@@ -81,7 +80,7 @@ function populate(){
 		}
 		
 		chrome.tabs.getSelected(null, function(tab) {
-			addRow(currentMaxId, '', tab.url,'',true, true);
+			addRow(currentMaxId, '', tab.url, true);
 		});
 	});
 }
@@ -94,9 +93,9 @@ function sortAliasesByName(aliases){
 	return aliasArray.sort();
 }
 
-function addRow(id, alias, link, updatedDate, active, front){
+function addRow(id, alias, link, front){
 	var $parentDiv = $("<div class='clear' />")
-						.attr({"id":id, "updatedOn": updatedDate}),
+						.attr("id", id),
 		$leftDiv = $("<div class='floatleft' style='width:83px'/>"),
 		$rightDiv = $("<div class='aliasLinkP' />"),
 		$aliasSpan = $("<span class='aliasNameP' />")
@@ -110,10 +109,7 @@ function addRow(id, alias, link, updatedDate, active, front){
 		$parentDiv.append($leftDiv)
 				  .append($rightDiv)
 				  .append($('<div><img src="edit.png" class="edit" title="edit"/> <img src="trash.gif" class="trash" title="delete"/></div>'));
-	if(!active){
-		$parentDiv.addClass("hidden");
-	}
-
+			
 	if(!front){
 		$("#dataList").append($parentDiv);
 	}
@@ -130,34 +126,24 @@ function saveItems(){
 		generalInfo = {},
 		maxId = 0,
 		length = 0,
-		isError = false,
-		isUpdated = false;
+		isError = false;
 		
 	$.each($aliases, function(){
 		var id = $(this).attr("id"),
 			alias = $(this).find(".aliasNameP").text(),
 			link = $(this).find(".urlSpan").text(),
-			createdOn = $(this).attr("createdOn"),
-			updatedOn = $(this).attr("updatedOn"),
-			active = true;
-
+			createdOn = '';
+			updatedOn = '';
 		if($(this).find(".aliasNameP").hasClass("hidden")){
 			alias = $(this).find(".aliasNameInput").val();
 			link = $(this).find(".aliasLinkInput").val();
 			$(this).find(".urlSpan").text(link);
 			$(this).find(".aliasNameP").text(alias);
-			updatedOn = new Date();
-			isUpdated = true;
 		}
-
-		if($(this).hasClass("hidden")){
-			active = false;
-		}
-
 		if(alias !== undefined && alias !== "" &&
 			 link !== undefined && link !== "")
 		{
-			dataList[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn, active: active };
+			dataList[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn };
 			if (maxId < parseInt(id, 10)){
 				maxId = parseInt(id, 10);
 			}
@@ -185,13 +171,10 @@ function saveItems(){
 	}
 	
 	generalInfo = {currentMaxId: maxId + 1, currentLength: length};
-	json = {GeneralInfo: generalInfo, Aliases: dataList, UpdatedOn:new Date()};
+	json = {GeneralInfo: generalInfo, Aliases: dataList};
 	
 	try{
 		chrome.extension.getBackgroundPage().saveAliasAndLinks(JSON.stringify(json));
-		chrome.storage.sync.get("AliasTabs", function(items){
-			//alert(items);
-		});
 	}
 	catch(err){
 		deliverMessage("There is some error in your local chrome storage.", "red");
@@ -201,8 +184,6 @@ function saveItems(){
 	$("#dataList input").addClass("hidden");
 	$("#dataList span").removeClass("hidden");
 	$("#dataList div").css("border", "none");
-	
-	alert(JSON.stringify(json)); //test
 	
 	deliverMessage("Your alias has been saved.", "black");
 }
@@ -272,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	
   $("#dataList").delegate(".trash", "click", function(){
 	if(confirm("Are you sure to delete?")){
-		$(this).parent().parent().addClass("hidden");
+		$(this).parent().parent().remove();
 	}
   });
 

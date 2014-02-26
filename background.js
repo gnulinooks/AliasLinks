@@ -35,7 +35,12 @@ function parseJsonObject(json){
 	if(json !== undefined && json !== '' && json !== null)
 	{
 		try{
-			mappings = checkTypeOfJson(json);
+			if(typeof(json) === "object"){
+				mappings = makeMappings(json);
+			}
+			else if(typeof(json === "string")){
+				mappings = makeMappings(JSON.parse(json));
+			}
 		}
 		catch(e){
 			var arr = json.split(" "), 
@@ -46,15 +51,6 @@ function parseJsonObject(json){
 			}
 		}
 		return mappings;
-	}
-}
-
-function checkTypeOfJson(json){
-	if(typeof(json) === "object"){
-		return json;
-	}
-	else if(typeof(json === "string")){
-		return JSON.parse(json);
 	}
 }
 
@@ -92,11 +88,9 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 				wordAfterUrl = tabUrl.substring(tabUrl.indexOf(' ')  + 1, tabUrl.length);
 				tabUrl = temp[0] + '+';
 			}
-			//alert(o.aliases['a3'] );
 			
 			if(o.aliases.hasOwnProperty(tabUrl))
 			{
-				//alert(tabUrl);
 				var newUrl = o.aliases[tabUrl] + wordAfterUrl;
 				var regex = /https?:\/\//;
 				if(!regex.test(newUrl))
@@ -128,27 +122,3 @@ chrome.tabs.onUpdated.addListener(function(id, changeInfo, tab){
 	}
 });
 
-//Synchronization of data
-/*function syncDataOnCloud(){
-	Chrome.storage.sync.get("AliasTabs", function(json){
-		var localData = checkTypeOfJson(initialize()),
-			updatedDate = new Date(),
-			cloudData = localData,
-			isCloudChanged = false,
-			isLocalChanged = false;
-		if(json.UpdatedDate === undefined){
-			if(localData.GeneralInfo !== undefined){
-				cloudData.UpdatedDate = updatedDate;
-				setData(cloudData);
-			}
-		}
-		else if(json.UpdatedDate !== localData.UpdatedDate){
-
-		}
-
-	});
-}
-
-function setData(value){
-	chrome.storage.sync.set({"AliasTabs" : value}, function(){});
-}*/
