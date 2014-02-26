@@ -1,0 +1,1 @@
+{"adobe":"http://helpx.adobe.com/flash-player/kb/size-limits-swf-bitmap-files.html","dev":"https://developers.google.com/speed/libraries/devguide","insertafter":"http://api.jquery.com/insertAfter/","json":"http://www.json.org/js.html"}
