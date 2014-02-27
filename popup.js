@@ -1,4 +1,6 @@
 var length = 0;
+var deletedItems = {};
+
 function obj( items){
 	this.arr = items.split(" ");
 	this.aliasLinkList = {};
@@ -11,8 +13,7 @@ function obj( items){
 /*
 	 takes the json string and parse it and makes object;
 */
-function createAliasesJSONObject(json)
-{
+function createAliasesJSONObject(json){
 	if(json !== undefined && json !== "")
 	{
 		try{
@@ -64,6 +65,7 @@ function populate(){
 		
 		if(aliasLinks !== undefined && aliasLinks !== "" && aliasLinks !== null)
 		{
+			//alert(JSON.stringify(aliasLinks));
 			aliases = createAliasesJSONObject(aliasLinks),
 			currentMaxId = aliases.GeneralInfo.currentMaxId,
 			currentLength = parseInt(aliases.GeneralInfo.currentLength, 10),
@@ -71,16 +73,19 @@ function populate(){
 			
 			for(var key = 0; key < sortedAliases.length; key++){
 				currentAlias = aliases.Aliases[sortedAliases[key]];
-				addRow(currentAlias.id, currentAlias.alias, currentAlias.link, false);
+				addRow(currentAlias.id, currentAlias.alias, currentAlias.link, currentAlias.createdOn, currentAlias.updatedOn, false);
 			}
 			
 			if(currentLength >= 5 ){
 				$("#dataList").addClass("scrollbar");
 			}
+			if(aliases.Deleted != null || aliases.Deleted != undefined){
+				deletedItems = aliases.Deleted;
+			}
 		}
 		
 		chrome.tabs.getSelected(null, function(tab) {
-			addRow(currentMaxId, '', tab.url, true);
+			addRow(currentMaxId, '', tab.url, '', '', true);
 		});
 	});
 }
@@ -93,9 +98,13 @@ function sortAliasesByName(aliases){
 	return aliasArray.sort();
 }
 
-function addRow(id, alias, link, front){
+function addRow(id, alias, link, createdOn, updatedOn, front){
+	if(isEmptyOrNull(createdOn)){
+		createdOn = (new Date()).toUTCString();
+		updatedOn = createdOn;
+	}
 	var $parentDiv = $("<div class='clear' />")
-						.attr("id", id),
+						.attr({"id":id, createdOn: createdOn, updatedOn: updatedOn}),
 		$leftDiv = $("<div class='floatleft' style='width:83px'/>"),
 		$rightDiv = $("<div class='aliasLinkP' />"),
 		$aliasSpan = $("<span class='aliasNameP' />")
@@ -132,8 +141,8 @@ function saveItems(){
 		var id = $(this).attr("id"),
 			alias = $(this).find(".aliasNameP").text(),
 			link = $(this).find(".urlSpan").text(),
-			createdOn = '';
-			updatedOn = '';
+			createdOn = $(this).attr("createdOn");
+			updatedOn = $(this).attr("updatedOn");
 		if($(this).find(".aliasNameP").hasClass("hidden")){
 			alias = $(this).find(".aliasNameInput").val();
 			link = $(this).find(".aliasLinkInput").val();
@@ -143,6 +152,9 @@ function saveItems(){
 		if(alias !== undefined && alias !== "" &&
 			 link !== undefined && link !== "")
 		{
+			if(deletedItems.hasOwnProperty(alias)){
+				delete deletedItems[alias];
+			}
 			dataList[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn };
 			if (maxId < parseInt(id, 10)){
 				maxId = parseInt(id, 10);
@@ -171,7 +183,7 @@ function saveItems(){
 	}
 	
 	generalInfo = {currentMaxId: maxId + 1, currentLength: length};
-	json = {GeneralInfo: generalInfo, Aliases: dataList};
+	json = {GeneralInfo: generalInfo, Aliases: dataList, Deleted: deletedItems};
 	
 	try{
 		chrome.extension.getBackgroundPage().saveAliasAndLinks(JSON.stringify(json));
@@ -180,7 +192,7 @@ function saveItems(){
 		deliverMessage("There is some error in your local chrome storage.", "red");
 		return;
 	}
-	
+	alert(JSON.stringify(json));
 	$("#dataList input").addClass("hidden");
 	$("#dataList span").removeClass("hidden");
 	$("#dataList div").css("border", "none");
@@ -212,16 +224,14 @@ function bindButtonClickEvents(){
 	});
 }
 
-function fillImportContent(json)
-{
+function fillImportContent(json){
 	saveItems(); //remove this after couple of months of publishing this version and call fillImportContent from populate
 	//passing aliasLinks as parameter;
 	var aliases = chrome.extension.getBackgroundPage().initialize();
 	$("#import").find("fieldset").append(aliases);
 }
 
-function editItem(e)
-{
+function editItem(e){
 	var $parentDiv = $(e).parent().parent(),
 	$inputAlias = $("<input />")
 					.addClass("aliasNameInput")
@@ -245,6 +255,18 @@ function editItem(e)
 	
 }
 
+function deleteAlias(item){
+	var id = $(item).attr("id"),
+		alias = $(item).find(".aliasNameP").text(),
+		link = $(item).find(".urlSpan").text(),
+		createdOn = $(item).attr("createdOn");
+		updatedOn = new Date().toUTCString();
+	if(!isEmptyOrNull(alias)){
+		deletedItems[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn };
+	}
+	$(item).remove();
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   $(".buttonArea").delegate(".saveAlias", "click", saveItems);
   $("#dataList").delegate(".edit","click", function(){	
@@ -253,7 +275,8 @@ document.addEventListener('DOMContentLoaded', function () {
 	
   $("#dataList").delegate(".trash", "click", function(){
 	if(confirm("Are you sure to delete?")){
-		$(this).parent().parent().remove();
+		//$(this).parent().parent().remove();
+		deleteAlias($(this).parent().parent());
 	}
   });
 
