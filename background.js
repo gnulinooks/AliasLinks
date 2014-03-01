@@ -5,7 +5,7 @@ function initialize(){
 		var value = window.localStorage.getItem("aliasTabs");
 		if(value == null){
 			window.localStorage.setItem("aliasTabs","");
-			return false;
+			return "";
 		}
 		else return value;
 	}catch(e){}
@@ -88,14 +88,30 @@ function syncData(){
 	chrome.storage.sync.get("aliasTabs", function (cloudData_aliasTabs) {
 		var cloudData = cloudData_aliasTabs.aliasTabs,
 			localData = initialize();
-			finalData = compareData(localData, cloudData);
+		
+		if(cloudData === undefined && localData === ""){
+			return;
+		}
+		
+		cloudData = validateData(cloudData);
+		localData = validateData(localData);
+		
+		var finalData = compareData(localData, cloudData);
 			
 		saveLocalAndCloudData(finalData);
 	});
 }
 
+function validateData(data){
+	if(data == null || data == undefined || data === ""){
+		return {};
+	}
+	else if(typeof(data) === "string"){
+		return JSON.parse(data);
+	}
+}
+
 function compareData(localData, cloudData){
-	alert(JSON.stringify(cloudData) + "vinay kumar");
 	localData = defineDeletedIfNotDefined(localData);
 	cloudData = defineDeletedIfNotDefined(cloudData);
 	if(cloudData && cloudData.GeneralInfo){
@@ -106,7 +122,7 @@ function compareData(localData, cloudData){
 			newData = {};
 			for(key in localData.Aliases){
 				if(key in cloudData.Aliases){
-					currentAlias = getUpdatedAlias(localData.Aliases[key], cloudData.Aliasses[key]);
+					currentAlias = getUpdatedAlias(localData.Aliases[key], cloudData.Aliases[key]);
 				}
 				else if(key in cloudData.Deleted){
 					if(!shouldAliasGoInDeleted(localData.Aliases[key], cloudData.Deleted[key])){
@@ -153,6 +169,8 @@ function compareData(localData, cloudData){
 			}
 			var generalInfo = {currentMaxId: id + 1, currentLength: length};
 			
+			//alert("final data " + JSON.stringify(newData) + " Deleted " + JSON.stringify(currentDeleted));
+			
 	        return {GeneralInfo: generalInfo, Aliases: newData, Deleted: currentDeleted};
 	}
 	else{
@@ -190,17 +208,18 @@ function defineDeletedIfNotDefined(data){
 		data.Deleted = {};
 		return data;
 	}
+	return data;
 }
 
 function saveLocalAndCloudData(finalData){
-	saveLocalData(finalData);
+	saveLocalData(JSON.stringify(finalData));
 	
 	saveCloudData(finalData);
 }
 
 function saveCloudData(data){
 	chrome.storage.sync.set({ "aliasTabs": data });
-	alert("stored data" + data);
+	//alert("stored data" + data);
 }
 
 chrome.omnibox.onInputEntered.addListener(function (text) {
@@ -214,7 +233,7 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 				tabUrl = temp[0] + '+';
 			}
 			
-			if(o.aliases.hasOwnProperty(tabUrl))
+			if(o.aliases && o.aliases.hasOwnProperty(tabUrl))
 			{
 				var newUrl = o.aliases[tabUrl] + wordAfterUrl;
 				var regex = /https?:\/\//;
@@ -235,7 +254,7 @@ chrome.tabs.onUpdated.addListener(function(id, changeInfo, tab){
 		wordAfterUrl = tabUrl.substring(tabUrl.indexOf('+')  + 1, tabUrl.length);
 		tabUrl = temp[0] + '+';
 	}
-	if(o.aliases.hasOwnProperty(tabUrl))
+	if(o.aliases && o.aliases.hasOwnProperty(tabUrl))
 	{
 		var newUrl = o.aliases[tabUrl] + wordAfterUrl;
 		var regex = /https?:\/\//;
@@ -247,3 +266,4 @@ chrome.tabs.onUpdated.addListener(function(id, changeInfo, tab){
 	}
 });
 
+syncData();
