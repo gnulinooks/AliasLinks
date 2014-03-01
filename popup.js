@@ -253,6 +253,7 @@ function editItem(e){
 	$parentDiv.find(".floatLeft").append($inputAlias);
 	$parentDiv.find(".aliasLinkP").append($inputLink);
 	
+	$parentDiv.attr("updatedOn", (new Date()).toUTCString());
 }
 
 function deleteAlias(item){

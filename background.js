@@ -109,6 +109,7 @@ function validateData(data){
 	else if(typeof(data) === "string"){
 		return JSON.parse(data);
 	}
+	return data;
 }
 
 function compareData(localData, cloudData){
@@ -179,7 +180,7 @@ function compareData(localData, cloudData){
 }
 
 function shouldAliasGoInDeleted(currentAlias, deletedAlias){
-	if( Date(currentAlias.updatedOn) < Date(deletedAlias.updatedOn) || deletedAlias.link === currentAlias.link){
+	if( (new Date(currentAlias.updatedOn)) < (new Date(deletedAlias.updatedOn)) || deletedAlias.link === currentAlias.link){
 		return true;
 	}
 	else{
@@ -188,11 +189,11 @@ function shouldAliasGoInDeleted(currentAlias, deletedAlias){
 }
 
 function getUpdatedAlias(localAlias, cloudAlias) {
-    if (    Date(cloudAlias.updatedOn) === Date(localAlias.updatedOn)
+    if ((new Date(cloudAlias.updatedOn)) === (new Date(localAlias.updatedOn))
         &&  cloudAlias.link === localAlias.link) {
         return cloudAlias;
     }
-    else if (Date(cloudAlias.updatedOn) > Date(localAlias.updatedOn)) {
+    else if ( (new Date(cloudAlias.updatedOn)) > (new Date(localAlias.updatedOn))) {
         return cloudAlias;
     }
     else {
