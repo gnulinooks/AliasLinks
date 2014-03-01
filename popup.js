@@ -192,7 +192,7 @@ function saveItems(){
 		deliverMessage("There is some error in your local chrome storage.", "red");
 		return;
 	}
-	alert(JSON.stringify(json));
+	//alert(JSON.stringify(json));
 	$("#dataList input").addClass("hidden");
 	$("#dataList span").removeClass("hidden");
 	$("#dataList div").css("border", "none");
