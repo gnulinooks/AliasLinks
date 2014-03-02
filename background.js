@@ -234,16 +234,21 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 				tabUrl = temp[0] + '+';
 			}
 			
+			var newUrl;
+			
 			if(o.aliases && o.aliases.hasOwnProperty(tabUrl))
 			{
-				var newUrl = o.aliases[tabUrl] + wordAfterUrl;
+				newUrl = o.aliases[tabUrl] + wordAfterUrl;
 				var regex = /https?:\/\//;
 				if(!regex.test(newUrl))
 				{
 					newUrl = "http://" + newUrl;
 				}
-				chrome.tabs.update(tab.id, {url: newUrl});
 			}
+			else{
+				newUrl = "http://google.com/search?q=" + text;
+			}
+			chrome.tabs.update(tab.id, {url: newUrl});
 		});
 	});
 });
