@@ -1,7 +1,7 @@
 {
   "name": "Alias Links",
   "manifest_version": 2,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Aliasing the links that we hardly remember. Set a unique word for a link.",
   "omnibox": {"keyword": "a"},
   "icons" : {
