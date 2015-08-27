@@ -141,8 +141,9 @@ function saveItems(){
 		var id = $(this).attr("id"),
 			alias = $(this).find(".aliasNameP").text(),
 			link = $(this).find(".urlSpan").text(),
-			createdOn = $(this).attr("createdOn");
+			createdOn = $(this).attr("createdOn"),
 			updatedOn = $(this).attr("updatedOn");
+
 		if($(this).find(".aliasNameP").hasClass("hidden")){
 			alias = $(this).find(".aliasNameInput").val();
 			link = $(this).find(".aliasLinkInput").val();
@@ -155,6 +156,7 @@ function saveItems(){
 			if(deletedItems.hasOwnProperty(alias)){
 				delete deletedItems[alias];
 			}
+			alert(alias);
 			dataList[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn };
 			if (maxId < parseInt(id, 10)){
 				maxId = parseInt(id, 10);

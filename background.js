@@ -239,12 +239,24 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 			if(o.aliases && o.aliases.hasOwnProperty(tabUrl))
 			{
 				newUrl = o.aliases[tabUrl] + wordAfterUrl;
-				var regex = /https?:\/\//;
+				var regex = /:\/\//; //remove 'https?' from here. We just need to check whether,
+				// :// is present or not, if not then pre-fix url with http://
 				if(!regex.test(newUrl))
 				{
 					newUrl = "http://" + newUrl;
 				}
 			}
+			// else if(o.aliases && o.aliases.hasOwnProperty(tabUrl))
+			// {
+			// 	newUrl = o.aliases[tabUrl] + wordAfterUrl;
+			// 	var regex = /:\/\//; //remove 'https?' from here. We just need to check whether,
+			// 	// :// is present or not, if not then pre-fix url with http://
+			// 	if(!regex.test(newUrl))
+			// 	{
+			// 		newUrl = "http://" + newUrl;
+			// 	}
+			// 	alert(newUrl);
+			// }
 			else{
 				newUrl = "http://google.com/search?q=" + text;
 			}
@@ -252,6 +264,7 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 		});
 	});
 });
+
 chrome.tabs.onUpdated.addListener(function(id, changeInfo, tab){
 	var tabUrl = tab.url.replace(/http:[^<]+&[q|p]=/,"");
 	var wordAfterUrl = "";
