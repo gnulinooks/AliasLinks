@@ -103,7 +103,7 @@ function addRow(id, alias, link, createdOn, updatedOn, front){
 		createdOn = (new Date()).toUTCString();
 		updatedOn = createdOn;
 	}
-	var $parentDiv = $("<div class='clear' />")
+	var $parentDiv = $("<div class='clear' style='padding-left: 8px;' />")
 						.attr({"id":id, createdOn: createdOn, updatedOn: updatedOn}),
 		$leftDiv = $("<div class='floatleft' style='width:83px'/>"),
 		$rightDiv = $("<div class='aliasLinkP' />"),
@@ -117,7 +117,7 @@ function addRow(id, alias, link, createdOn, updatedOn, front){
 		$rightDiv.append($linkSpan);
 		$parentDiv.append($leftDiv)
 				  .append($rightDiv)
-				  .append($('<div><img src="edit.png" class="edit" title="edit"/> <img src="trash.gif" class="trash" title="delete"/></div>'));
+				  .append($('<div class="action-buttons"><img src="edit.png" class="edit" title="edit"/> <img src="trash.gif" class="trash" title="delete"/></div>'));
 			
 	if(!front){
 		$("#dataList").append($parentDiv);
@@ -137,7 +137,7 @@ function saveItems(){
 		length = 0,
 		isError = false;
 		
-	$.each($aliases, function(){
+	$.each($aliases, function(index, value){
 		var id = $(this).attr("id"),
 			alias = $(this).find(".aliasNameP").text(),
 			link = $(this).find(".urlSpan").text(),
@@ -153,26 +153,37 @@ function saveItems(){
 		if(alias !== undefined && alias !== "" &&
 			 link !== undefined && link !== "")
 		{
+			$(this).removeClass("should-be-visible");
 			if(deletedItems.hasOwnProperty(alias)){
 				delete deletedItems[alias];
 			}
-			alert(alias);
+			//alert(alias);
+			if(alias in dataList){
+				deliverMessage("<br>" + alias + " was already present in the list and will be saved. More actions : Edit, Delete", "red" );
+			}
 			dataList[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn };
 			if (maxId < parseInt(id, 10)){
 				maxId = parseInt(id, 10);
 			}
 			length++;
 		}
-		else if(isEmptyOrNull(alias) && !isEmptyOrNull(link)){
+		else if( isEmptyOrNull(alias) && !isEmptyOrNull(link)){
 			$(this).find(".floatLeft").css("border", "1px solid red");
-			isError = true;
+			if(index > 0){
+				isError = true;
+			}
+			else{
+				$(this).addClass("should-be-visible");
+			}
 		}
 		else if(!isEmptyOrNull(alias) && isEmptyOrNull(link)){
 			$(this).find(".aliasLinkP").css("border", "1px solid red");
 			isError = true;
 		}
-		else{
-			$(this).addClass("hidden");
+		else {
+			if(index > 1){
+				$(this).addClass("hidden");
+			}	
 		}
 	});
 	if(maxId <= 0 || length <= 0){
@@ -180,7 +191,7 @@ function saveItems(){
 	}
 	
 	if(isError){
-		deliverMessage("Please give proper value to the input fields.", "red");
+		deliverMessage("<br>Please give proper value to the input fields.", "red");
 		return;
 	}
 	
@@ -191,20 +202,27 @@ function saveItems(){
 		chrome.extension.getBackgroundPage().saveAliasAndLinks(JSON.stringify(json));
 	}
 	catch(err){
-		deliverMessage("There is some error in your local chrome storage.", "red");
+		deliverMessage("<br>There is some error in your local chrome storage.", "red");
 		return;
 	}
 	//alert(JSON.stringify(json));
 	$("#dataList input").addClass("hidden");
 	$("#dataList span").removeClass("hidden");
-	$("#dataList div").css("border", "none");
+	$(".should-be-visible input").removeClass("hidden");
+	$(".should-be-visible span").addClass("hidden");
+	$("#dataList>div").css({"border":"none", "height" : "20px"});
+	$(".should-be-visible div").css({"height" : "40px"});
 	
-	deliverMessage("Your alias has been saved.", "black");
+	deliverMessage("<br>Your alias has been saved.", "black");
 }
 
 function deliverMessage(message, color){
+	var text = $("#savedMessage").html().toString();
+	if(text.indexOf(message) >= 0){
+		return;
+	}
 	$("#savedMessage").css({"color":color, "display": "block"})
-		.text(message);
+		.append(message);
 }
 
 function isEmptyOrNull(str){
@@ -235,10 +253,10 @@ function fillImportContent(json){
 
 function editItem(e){
 	var $parentDiv = $(e).parent().parent(),
-	$inputAlias = $("<input />")
+	$inputAlias = $("<input class='form-control'/>")
 					.addClass("aliasNameInput")
 					.val($parentDiv.find(".aliasNameP").text()),
-	$inputLink = $("<input/>")
+	$inputLink = $("<input class='form-control'/>")
 					.addClass("aliasLinkInput")
 					.val($parentDiv.find(".urlSpan").text());
 					
@@ -246,6 +264,7 @@ function editItem(e){
 	{
 		return;
 	}
+
 	$parentDiv.find(".aliasNameP").addClass("hidden");
 	$parentDiv.find(".urlSpan").addClass("hidden");
 	if($parentDiv.find("input").length > 0){
@@ -254,7 +273,7 @@ function editItem(e){
 	}
 	$parentDiv.find(".floatLeft").append($inputAlias);
 	$parentDiv.find(".aliasLinkP").append($inputLink);
-	
+	$parentDiv.css({ "height": "50px"});
 	$parentDiv.attr("updatedOn", (new Date()).toUTCString());
 }
 
@@ -268,6 +287,7 @@ function deleteAlias(item){
 		deletedItems[alias] = { id: id, alias: alias, link: link, createdOn: createdOn, updatedOn: updatedOn };
 	}
 	$(item).remove();
+	deliverMessage("<br>Changes will be reflected if you save them", "red");
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -276,11 +296,13 @@ document.addEventListener('DOMContentLoaded', function () {
 		editItem(this);
   });
 	
-  $("#dataList").delegate(".trash", "click", function(){
-	if(confirm("Are you sure to delete?")){
-		//$(this).parent().parent().remove();
+  $("#dataList").delegate(".trash", "click", function(e){
+  // 	var r = confirm("Are you sure to delete?");
+  // 	e.preventDefault();
+		// if(r == true){
+			//$(this).parent().parent().remove();
 		deleteAlias($(this).parent().parent());
-	}
+		//}
   });
 
   $("#dataList").delegate("input", "keypress", function(key){
