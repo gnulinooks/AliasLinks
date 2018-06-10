@@ -239,10 +239,19 @@ chrome.omnibox.onInputEntered.addListener(function (text) {
 			if(o.aliases && o.aliases.hasOwnProperty(tabUrl))
 			{
 				newUrl = o.aliases[tabUrl] + wordAfterUrl;
-				var regex = /https?:\/\//;
-				if(!regex.test(newUrl))
+				var relativeUrlRegex = /^\//;
+				if(relativeUrlRegex.test(newUrl))
 				{
-					newUrl = "http://" + newUrl;
+					var domainNameRegex = /(https?:\/\/[^\/]*)/;
+					var domainName = tab.url.match(domainNameRegex)[0];
+					newUrl = domainName + newUrl;
+				}
+				else{
+					var regex = /https?:\/\//;
+					if(!regex.test(newUrl))
+					{
+						newUrl = "http://" + newUrl;
+					}
 				}
 			}
 			else{
